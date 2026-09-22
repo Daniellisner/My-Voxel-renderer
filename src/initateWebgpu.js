@@ -925,6 +925,14 @@ let D = cellPos.xyz + up[u32(worldPos.w)] * neighborDirections;
 let u = 0.5 - dot(fractPos,right[u32(worldPos.w)] * neighborDirections);
 let v = 0.5 - dot(fractPos,up[u32(worldPos.w)] * neighborDirections);
 
+let textureUV = vec2(
+dot(worldPos.xyz - floor(worldPos.xyz), right[u32(worldPos.w)]),
+dot(worldPos.xyz - floor(worldPos.xyz), up[u32(worldPos.w)])
+);
+
+var te = textureLoad(voxelTextures, vec2u(textureUV * vec2f(textureDimensions(voxelTextures, 0))), 0);
+
+
 let Acolor = vec4f(unpack4xU8(lightingBufferRead[u32(A.x + A.y * 32.0 + A.z * 1024.0) * 6 + u32(worldPos.w)]));
 let Bcolor = vec4f(unpack4xU8(lightingBufferRead[u32(B.x + B.y * 32.0 + B.z * 1024.0) * 6 + u32(worldPos.w)]));
 let Ccolor = vec4f(unpack4xU8(lightingBufferRead[u32(C.x + C.y * 32.0 + C.z * 1024.0) * 6 + u32(worldPos.w)]));
@@ -935,8 +943,6 @@ let wB = u * (1.0 - v);
 let wC = u * v;
 let wD = (1.0 - u) * v;
 
-var lightInt = Acolor * wA + Bcolor * wB + Ccolor * wC + Dcolor * wD;
-var totalWeight = wA * f32(Acolor.w > 0.0) + wB * f32(Bcolor.w > 0.0) + wC * f32(Ccolor.w > 0.0) + wD * f32(Dcolor.w > 0.0);
 
 let upperNeighborB = B + normal;
 let upperNeighborBExists = f32(textureLoad(cellTex, vec3<u32>(vec2<u32>(upperNeighborB.xy), u32(upperNeighborB.z)), 0).x>0);
@@ -946,6 +952,10 @@ let upperNeighborCExists = f32(textureLoad(cellTex, vec3<u32>(vec2<u32>(upperNei
 
 let upperNeighborD = D + normal;
 let upperNeighborDExists = f32(textureLoad(cellTex, vec3<u32>(vec2<u32>(upperNeighborD.xy), u32(upperNeighborD.z)), 0).x>0);
+
+var lightInt = Acolor * wA + Bcolor * wB + Ccolor * wC * (1.0 - upperNeighborBExists * upperNeighborDExists) + Dcolor * wD;
+var totalWeight = wA * f32(Acolor.w > 0.0) + wB * f32(Bcolor.w > 0.0) + wC * f32(Ccolor.w > 0.0) * (1.0 - upperNeighborBExists * upperNeighborDExists) + wD * f32(Dcolor.w > 0.0);
+
 
 //return vec4(textureLoad(cellTex, vec3<u32>(vec2<u32>(cellPos.xy), u32(cellPos.z)), 0).x,0.0,0.0,1.0);
 //return vec4((upperNeighborBExists+ upperNeighborCExists +upperNeighborDExists)/3.0);
@@ -997,7 +1007,7 @@ lightInt /= max(totalWeight,0.0001);
 //return vec4(ssoLight);
 
 
-    return vec4((lightInt.xyz)/256.0 * 1.5* ssoLight *mix(0.5,1.0,illum),1.0);
+    return vec4(te.xyz * (lightInt.xyz)/256.0 * 1.5* ssoLight *mix(0.5,1.0,illum),1.0);
 
 
     
