@@ -405,38 +405,14 @@ device.queue.writeTexture(
 
       const lightingBuffer = createStorageBuffer(device, 32 * 32 * 32 *  6 * 4)
 
-       const debugQuadBindGroup = device.createBindGroup({
-    layout: debugQuadPipeline.getBindGroupLayout(0),
-    entries: [
-      {
-        binding: 10, resource: lightSourceDepthTextureView
 
-      },
-      {
-        binding: 0, resource: uniformBuffer
-
-      },
-
-      {
-        binding: 11, resource: lightSourceRenderTexture.createView()
-
-      },{binding:19, resource: renderPassTextureView},
-      { binding: 17, resource: lightingBuffer.storageBuffer },
-      { binding: 13, resource: cellTexture.createView() }
-
-
-
-       
-
-
-    ]
-  });
 
   const voxelTexture = device.createTexture({
     size: [32, 32],
     format: 'rgba8unorm',
     usage: GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST | GPUTextureUsage.RENDER_ATTACHMENT,
   });
+
 
 
    const img = new Image();
@@ -478,6 +454,33 @@ device.queue.writeTexture(
     img.src = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACtklEQVR4AcTW0U0kQQxFUZgAgAjIgNCJhgzIABJgdUrclin1gOZrV7pr+/m5yt07zHJ5fX39+p9c7k7+PD4+3kXt6hn13t/f7z4+PhbqWzkW6CAX7Ic8Pz8fC8n3vtrcNWbfPHjpxwIJPU2RLmcOB5QXeSKtyO8c5BHVawEFMyHUQcsj9rbqizzBAzrkkCOffC0gySDOC9QTPdDMQQ465JBHNX+aeCygwYS5oZqxvqgvTmi/kdd5cl7xdAEXBhMMpolqetBuxRlrAdv4oJyhF3vf5bt2a70WcBC6aEa6J7Mt1OARQ72j99fssYDhr68vM6fMyxmqzXnqh4eH47tCf8I7aSmzF8OZn56e1iFqTTH4aBNaB9/f3y+rmmcV33/x7by8vKxvz/UGDBhss5l/n3EEvSCaFWki5JCH2vmhNnt5e3u7I06jBgPSpyetWT7kEdX51OWi82m4KIgKQ0HbqVc0C3XemacV9eCutIuCSBBBqxZDb8IHmhj8NDHOatr6EO4fELUnEx0g3sIts+tDaHPbwIU7DtzJ89dsvmtxLVBzv6R6789FefTFnfnd4A3Ovhn8WMDBO0wN1nMYPfTLZ/z8/Fw/62l8UBePBRLEHQMuF3Etr6cPdWepgx7HAv4tiZmKdFRPjxyzn0/UE/XlE7r6WEARmpFWdJhetTifcq/zijAPOX4sQIBDQn2N6ZmHylFfHvtZawEfquhprsV8ogvEa3TGtT59LeCgzDPSYfs2V58x58rz/Ta//i8wkFkOF05NTocc8lCHWVQX8854yZiohtfToFouQo7yZkV6UT7hD28F6w0waRDkUIsTB5/Bw4/6tAldLcIDYr0Bg2CYsTxdbcmJ3wnoefSmRgdd5J2sBTQmzExTs3WkV/PDDOpfizyxfgoqzmKH6LkEcsghP8PsJM/U/gEAAP//hXepjQAAAAZJREFUAwCEVy2gS1aLMAAAAABJRU5ErkJggg==";
   
 
+           const debugQuadBindGroup = device.createBindGroup({
+    layout: debugQuadPipeline.getBindGroupLayout(0),
+    entries: [
+      {
+        binding: 10, resource: lightSourceDepthTextureView
+
+      },
+      {
+        binding: 0, resource: uniformBuffer
+
+      },
+
+      {
+        binding: 11, resource: lightSourceRenderTexture.createView()
+
+      },{binding:19, resource: renderPassTextureView},
+      { binding: 17, resource: lightingBuffer.storageBuffer },
+      { binding: 13, resource: cellTexture.createView() },
+      { binding: 8, resource: voxelTexture.createView() }
+
+
+
+       
+
+
+    ]
+  });
 
     const storageData = createStorageBuffer(device, Math.floor(it * 1.5) * 8 * 4)
     const atomicStorageData = createStorageBuffer(device, 4)
