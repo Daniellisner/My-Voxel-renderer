@@ -873,13 +873,15 @@ fn fs_main_fullscreen(@builtin(position) fragCoord : vec4<f32>)
     
     }
 
+    //return vec4(worldPos);
+
     var cellPos = floor(worldPos.xyz - normal*0.001);
      //depth = pow(depth,0.0);
 
      //return vec4(color.x/32.0,color.y/32.0,color.z/32.0,1.0);
      //return vec4(depth,depth,depth,1.0);
 
-    let ray = computeRay(fragCoord.xy/1024.0, ourStruct.view,ourStruct.projection);
+    let ray = computeRay(fragCoord.xy/vec2(4096.0), ourStruct.lightView,ourStruct.lightProjection);
     var dda = ddaInit(ray);
 
     const MAX_STEPS = 30;
@@ -891,19 +893,45 @@ var shadowMapUV = ourStruct.lightProjection * ourStruct.lightView * vec4(worldPo
     shadowMapUV.y = 1.0- shadowMapUV.y;
     let sampledDepth3 = textureLoad(shadowTex,vec2<u32>(shadowMapUV.xy * vec2f(textureDimensions(shadowTex, 0))),0);
 
-        var illum = 0.0;
+        var illum = 1.0;
         let forward3 = -vec3<f32>(ourStruct.lightView[0].z, ourStruct.lightView[1].z, ourStruct.lightView[2].z);
+    var colorSample2 = vec4f(0.0);
+    var covered = false;
 
+    let lightDir = vec3(1.0);
+    var selfSample = vec3(0.0);
 
     for(var ixs = 0i; ixs<3i; ixs++){
         for(var iys = 0i; iys<3i; iys++){
             let offset = vec2f(f32(ixs-1),f32(iys-1));
-            let colorSample2 = textureLoad(renderTex,vec2<u32>(shadowMapUV.xy * vec2f(textureDimensions(renderTex, 0)) + offset),0);
-            if(length(cellPos.xyz - colorSample2.xyz)<0.9 && dot(normal,forward3)<0.0){
-                illum = 1.0;
+             colorSample2 = textureLoad(renderTex,vec2<u32>(shadowMapUV.xy * vec2f(textureDimensions(renderTex, 0)) + offset),0);
+            
+            
+             covered = rayIntersectsAABB(vec3(colorSample2.xyz),vec3(colorSample2.xyz) + vec3(1.0),worldPos.xyz,lightDir);
+            
+            let dotSelf = dot(cellPos.xyz,vec3(1.0));
+            let dotSample = dot(colorSample2.xyz,vec3(1.0));
+            
+             if (dotSample - dotSelf<0.1){
+            
+                covered =false;
+                selfSample = (cellPos.xyz-colorSample2.xyz);
+
+            }
+
+            
+            
+            //return vec4(f32(covered));
+            if((dotSample -dotSelf >0.9 && covered) || dot(normal,forward3)>0.0){
+                illum = 0.0;
             }
         }
-    }
+    }   
+        //return vec4(abs(selfSample.x),abs(selfSample.y),abs(selfSample.z),1.0);
+
+        //return vec4(f32(illum),0.0,selfSample,1.0);
+
+        //return vec4(illum);
 
     
     //var te = textureLoad(voxelTextures, vec2<u32>((in.uv+1.0)*0.5 * vec2f(textureDimensions(voxelTextures, 0))), 0);
@@ -1203,6 +1231,8 @@ fn fs(in: VSOut) -> @location(0) vec4f {
             }
         }
     }
+
+
 
     
     var te = textureLoad(voxelTextures, vec2<u32>((in.uv+1.0)*0.5 * vec2f(textureDimensions(voxelTextures, 0))), 0);
